@@ -1,4 +1,4 @@
-# Instructoins
+# Instructions
 
 ## Compile
 
