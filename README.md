@@ -15,7 +15,7 @@ $ go get github.com/schollz/browsersync
 $ browsersync
 ```
 
-Open up `localhost:8002` and in the console, you can try things like:
+Open up `localhost:8003` and in the console, you can try things like:
 
 ## Generating a PAKE session key
 
