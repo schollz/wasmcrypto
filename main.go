@@ -401,15 +401,16 @@ func (e Encryption) Decrypt(encrypted []byte) (plaintext []byte, err error) {
 
 // encrypt(message,password,salt)
 func encrypt(this js.Value, inputs []js.Value) interface{} {
+	if len(inputs) != 3 {
+		return js.Global().Get("Error").New("not enough inputs")
+	}
 	e, err := NewEncryption([]byte(inputs[1].String()), []byte(inputs[2].String()))
 	if err != nil {
-		fmt.Println(err.Error())
-		return nil
+		return js.Global().Get("Error").New(err.Error())
 	}
 	enc, err := e.Encrypt([]byte(inputs[0].String()))
 	if err != nil {
-		fmt.Println(err.Error())
-		return nil
+		return js.Global().Get("Error").New(err.Error())
 	}
 	return hex.EncodeToString(enc)
 }
@@ -418,18 +419,15 @@ func encrypt(this js.Value, inputs []js.Value) interface{} {
 func decrypt(this js.Value, inputs []js.Value) interface{} {
 	e, err := NewEncryption([]byte(inputs[1].String()), []byte(inputs[2].String()))
 	if err != nil {
-		fmt.Println(err.Error())
-		return nil
+		return js.Global().Get("Error").New(err.Error())
 	}
 	decBytes, err := hex.DecodeString(inputs[0].String())
 	if err != nil {
-		fmt.Println(err.Error())
-		return nil
+		return js.Global().Get("Error").New(err.Error())
 	}
 	dec, err := e.Decrypt(decBytes)
 	if err != nil {
-		fmt.Println(err.Error())
-		return nil
+		return js.Global().Get("Error").New(err.Error())
 	}
 	return string(dec)
 }
@@ -438,31 +436,35 @@ func decrypt(this js.Value, inputs []js.Value) interface{} {
 // returns: pakeBytes
 func pakeInit(this js.Value, inputs []js.Value) interface{} {
 	// initialize sender P ("0" indicates sender)
+	if len(inputs) != 2 {
+		return js.Global().Get("Error").New("need weakPassphrase, role")
+	}
 	role := 0
 	if inputs[1].String() == "1" {
 		role = 1
 	}
 	P, err := Init([]byte(inputs[0].String()), role, elliptic.P521(), 1*time.Millisecond)
 	if err != nil {
-		fmt.Println(err)
+		return js.Global().Get("Error").New(err.Error())
 	}
 	return string(P.Bytes())
 }
 
 // pakeUpdate(pakeBytes,otherPublicPakeBytes)
 func pakeUpdate(this js.Value, inputs []js.Value) interface{} {
+	if len(inputs) != 2 {
+		return js.Global().Get("Error").New("need two input")
+	}
 	var P, Q *Pake
 	err := json.Unmarshal([]byte(inputs[0].String()), &P)
 	P.curve = elliptic.P521()
 	if err != nil {
-		fmt.Println(err.Error())
-		return nil
+		return js.Global().Get("Error").New(err.Error())
 	}
 	err = json.Unmarshal([]byte(inputs[1].String()), &Q)
 	Q.curve = elliptic.P521()
 	if err != nil {
-		fmt.Println(err.Error())
-		return nil
+		return js.Global().Get("Error").New(err.Error())
 	}
 	P.Update(Q.Bytes())
 	return string(P.Bytes())
@@ -474,8 +476,7 @@ func pakePublic(this js.Value, inputs []js.Value) interface{} {
 	err := json.Unmarshal([]byte(inputs[0].String()), &P)
 	P.curve = elliptic.P521()
 	if err != nil {
-		fmt.Println(err.Error())
-		return nil
+		return js.Global().Get("Error").New(err.Error())
 	}
 	return string(P.Public().Bytes())
 }
@@ -486,13 +487,11 @@ func pakeSessionKey(this js.Value, inputs []js.Value) interface{} {
 	err := json.Unmarshal([]byte(inputs[0].String()), &P)
 	P.curve = elliptic.P521()
 	if err != nil {
-		fmt.Println(err.Error())
-		return nil
+		return js.Global().Get("Error").New(err.Error())
 	}
 	key, err := P.SessionKey()
 	if err != nil {
-		fmt.Println(err.Error())
-		return nil
+		return js.Global().Get("Error").New(err.Error())
 	}
 	return hex.EncodeToString(key)
 }
